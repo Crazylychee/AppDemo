@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>小学四则运算生成器</title>
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -85,12 +84,15 @@
       color: #333;
     }
   </style>
-
 </head>
 <body>
 <div class="container">
   <div class="left-section">
     <h1>小学四则运算生成器</h1>
+    <div class="input-group">
+      <label for="numSetUp">生成数字的范围:</label>
+      <input type="number" id="numSetUp" min="1" value="10">
+    </div>
     <div class="input-group">
       <label for="numQuestions">生成题目数量:</label>
       <input type="number" id="numQuestions" min="1" value="10">
@@ -108,7 +110,10 @@
       <button onclick="downloadQuestions()">下载题目</button>
       <button onclick="downloadAnswers()">下载答案</button>
       <button onclick="calculateAccuracy(userAnswers)">计算正确率</button>
+
     </div>
+
+
   </div>
   <div class="right-section">
     <div class="questions-container">
@@ -117,43 +122,53 @@
   </div>
 </div>
 
-
-
 <script>
   let questions = [];
   let answers = [];
   let userAnswers = [];
   function generateQuestions() {
     const numQuestions = parseInt(document.getElementById('numQuestions').value, 10);
+
+
     questions = [];
     answers = [];
     const questionsDiv = document.getElementById('questions');
     questionsDiv.innerHTML = '';
 
+
     for (let i = 0; i < numQuestions; i++) {
       let question, answer;
+
       // 随机选择是否包含括号
       const hasBrackets = Math.random() > 0.5;
+
       if (hasBrackets) {
         question = generateExpressionWithBrackets();
       } else {
         question = generateSimpleExpression();
       }
+
       questions.push(question);
+
       // 计算答案
       answer = calculateAnswer(question);
       answers.push(answer);
+
+
+
       const questionElement = document.createElement('p');
       questionElement.innerText = `${i + 1}. ${question} =`;
       questionsDiv.appendChild(questionElement);
     }
   }
+
   function generateSimpleExpression() {
     const num1 = generateNumber();
     const num2 = generateNumber();
     const operator = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
     return `${num1} ${operator} ${num2}`;
   }
+
   function generateExpressionWithBrackets() {
     const num1 = generateNumber();
     const num2 = generateNumber();
@@ -162,20 +177,26 @@
     const operator2 = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
     return `(${num1} ${operator1} ${num2}) ${operator2} ${num3}`;
   }
+
   function generateNumber() {
+
+    const numSetUp = parseInt(document.getElementById('numSetUp').value, 10);
+
     const isFraction = Math.random() > 0.5;
     if (isFraction) {
       const numerator = Math.floor(Math.random() * 10) + 1;
       const denominator = Math.floor(Math.random() * 10) + 1;
       return convertToMixedNumber(`${numerator}/${denominator}`);
     } else {
-      return Math.floor(Math.random() * 100).toString();
+      return Math.floor(Math.random() * numSetUp).toString();
     }
   }
+
   function convertToMixedNumber(fraction) {
     const [numerator, denominator] = fraction.split('/').map(Number);
     const integerPart = Math.floor(numerator / denominator);
     const remainder = numerator % denominator;
+
     if (integerPart === 0) {
       return fraction;
     }else if (remainder ===0){
@@ -184,6 +205,7 @@
       return `${integerPart}'${remainder}/${denominator}`;
     }
   }
+
   function calculateAnswer(expression) {
     // 使用 eval 计算表达式，注意 eval 的安全性问题
     try {
@@ -192,17 +214,21 @@
       return 'Error';
     }
   }
+
   function convertToMathExpression(expression) {
     // 将带分数转换为浮点数
     return expression.replace(/(\d+)'(\d+)\/(\d+)/g, (match, p1, p2, p3) => parseFloat(p1) + parseFloat(p2) / parseFloat(p3));
   }
+
   function downloadQuestions() {
     if (questions.length === 0) {
       alert('请先生成题目！');
       return;
     }
+
     const questionsText = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
     const allText = `题目：\n${questionsText}\n`;
+
     const blob = new Blob([allText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -213,13 +239,16 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
   function downloadAnswers() {
     if (answers.length === 0) {
       alert('请先生成题目！');
       return;
     }
+
     const answersText = answers.map((a, i) => `${i + 1}. ${a}`).join('\n');
     const allText = `答案：\n${answersText}\n`;
+
     const blob = new Blob([allText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -230,33 +259,45 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+
   function parseAnswersFile(file) {
+
     userAnswers = [];
+
     const reader = new FileReader();
     reader.onload = function(event) {
       const content = event.target.result;
       const lines = content.split('\n').map(line => line.trim()).filter(line => line);
       const answersText = lines.join('\n');
       userAnswers = answersText.replace(/^答案：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
+
     };
     reader.readAsText(file);
   }
+
   function parseQuestionsFile(file) {
+
     questions = [];
+
     const reader = new FileReader();
     reader.onload = function(event) {
       const content = event.target.result;
       const lines = content.split('\n').map(line => line.trim()).filter(line => line);
       const answersText = lines.join('\n');
       questions = answersText.replace(/^题目：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
+
+
       const questionsDiv = document.getElementById('questions');
       questionsDiv.innerHTML = '';
+
       // 显示题目
       questions.forEach((question) => {
         const questionElement = document.createElement('p');
         questionElement.innerText = `${question}=`;
         questionsDiv.appendChild(questionElement);
       });
+
       // 计算答案
       questions.forEach((question) => {
         const answer = calculateAnswer(question);
@@ -265,9 +306,12 @@
     };
     reader.readAsText(file);
   }
+
   function calculateAccuracy(userAnswers) {
+
     let rightGrade = [];
     let wrongGrade = [];
+
     if (userAnswers.length === 0) {
       alert('请先上传答案文件！');
       return;
@@ -287,7 +331,10 @@
     }
     const accuracy = (correctCount / answers.length) * 100;
     alert(`正确率: ${accuracy.toFixed(2)}%`);
+
+
     grade = `正确题目：${rightGrade.join(', ')}\n错误题目：${wrongGrade.join(', ')}\n正确率: ${accuracy.toFixed(2)}%\n`;
+
     const blob = new Blob([grade], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
