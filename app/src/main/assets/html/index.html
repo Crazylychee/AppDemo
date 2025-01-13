@@ -325,7 +325,7 @@
       if (parseFloat(userAnswers[i]) === answers[i]) {
         rightGrade.push(i + 1);
         correctCount++;
-      }else {
+      }else if (userAnswers[i] !== answers[i]&&userAnswers[i]!==undefined){
         wrongGrade.push(i + 1);
       }
     }
