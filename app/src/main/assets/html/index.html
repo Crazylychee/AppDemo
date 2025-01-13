@@ -116,5 +116,188 @@
     </div>
   </div>
 </div>
+
+
+
+<script>
+  let questions = [];
+  let answers = [];
+  let userAnswers = [];
+  function generateQuestions() {
+    const numQuestions = parseInt(document.getElementById('numQuestions').value, 10);
+    questions = [];
+    answers = [];
+    const questionsDiv = document.getElementById('questions');
+    questionsDiv.innerHTML = '';
+
+    for (let i = 0; i < numQuestions; i++) {
+      let question, answer;
+      // 随机选择是否包含括号
+      const hasBrackets = Math.random() > 0.5;
+      if (hasBrackets) {
+        question = generateExpressionWithBrackets();
+      } else {
+        question = generateSimpleExpression();
+      }
+      questions.push(question);
+      // 计算答案
+      answer = calculateAnswer(question);
+      answers.push(answer);
+      const questionElement = document.createElement('p');
+      questionElement.innerText = `${i + 1}. ${question} =`;
+      questionsDiv.appendChild(questionElement);
+    }
+  }
+  function generateSimpleExpression() {
+    const num1 = generateNumber();
+    const num2 = generateNumber();
+    const operator = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
+    return `${num1} ${operator} ${num2}`;
+  }
+  function generateExpressionWithBrackets() {
+    const num1 = generateNumber();
+    const num2 = generateNumber();
+    const num3 = generateNumber();
+    const operator1 = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
+    const operator2 = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
+    return `(${num1} ${operator1} ${num2}) ${operator2} ${num3}`;
+  }
+  function generateNumber() {
+    const isFraction = Math.random() > 0.5;
+    if (isFraction) {
+      const numerator = Math.floor(Math.random() * 10) + 1;
+      const denominator = Math.floor(Math.random() * 10) + 1;
+      return convertToMixedNumber(`${numerator}/${denominator}`);
+    } else {
+      return Math.floor(Math.random() * 100).toString();
+    }
+  }
+  function convertToMixedNumber(fraction) {
+    const [numerator, denominator] = fraction.split('/').map(Number);
+    const integerPart = Math.floor(numerator / denominator);
+    const remainder = numerator % denominator;
+    if (integerPart === 0) {
+      return fraction;
+    }else if (remainder ===0){
+      return integerPart;
+    } else {
+      return `${integerPart}'${remainder}/${denominator}`;
+    }
+  }
+  function calculateAnswer(expression) {
+    // 使用 eval 计算表达式，注意 eval 的安全性问题
+    try {
+      return eval(convertToMathExpression(expression));
+    } catch (e) {
+      return 'Error';
+    }
+  }
+  function convertToMathExpression(expression) {
+    // 将带分数转换为浮点数
+    return expression.replace(/(\d+)'(\d+)\/(\d+)/g, (match, p1, p2, p3) => parseFloat(p1) + parseFloat(p2) / parseFloat(p3));
+  }
+  function downloadQuestions() {
+    if (questions.length === 0) {
+      alert('请先生成题目！');
+      return;
+    }
+    const questionsText = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
+    const allText = `题目：\n${questionsText}\n`;
+    const blob = new Blob([allText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'questions.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function downloadAnswers() {
+    if (answers.length === 0) {
+      alert('请先生成题目！');
+      return;
+    }
+    const answersText = answers.map((a, i) => `${i + 1}. ${a}`).join('\n');
+    const allText = `答案：\n${answersText}\n`;
+    const blob = new Blob([allText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'answers.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function parseAnswersFile(file) {
+    userAnswers = [];
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const content = event.target.result;
+      const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+      const answersText = lines.join('\n');
+      userAnswers = answersText.replace(/^答案：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
+    };
+    reader.readAsText(file);
+  }
+  function parseQuestionsFile(file) {
+    questions = [];
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const content = event.target.result;
+      const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+      const answersText = lines.join('\n');
+      questions = answersText.replace(/^题目：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
+      const questionsDiv = document.getElementById('questions');
+      questionsDiv.innerHTML = '';
+      // 显示题目
+      questions.forEach((question) => {
+        const questionElement = document.createElement('p');
+        questionElement.innerText = `${question}=`;
+        questionsDiv.appendChild(questionElement);
+      });
+      // 计算答案
+      questions.forEach((question) => {
+        const answer = calculateAnswer(question);
+        answers.push(answer);
+      });
+    };
+    reader.readAsText(file);
+  }
+  function calculateAccuracy(userAnswers) {
+    let rightGrade = [];
+    let wrongGrade = [];
+    if (userAnswers.length === 0) {
+      alert('请先上传答案文件！');
+      return;
+    }
+    if (answers.length === 0) {
+      alert('请先生成题目！');
+      return;
+    }
+    let correctCount = 0;
+    for (let i = 0; i < answers.length; i++) {
+      if (parseFloat(userAnswers[i]) === answers[i]) {
+        rightGrade.push(i + 1);
+        correctCount++;
+      }else {
+        wrongGrade.push(i + 1);
+      }
+    }
+    const accuracy = (correctCount / answers.length) * 100;
+    alert(`正确率: ${accuracy.toFixed(2)}%`);
+    grade = `正确题目：${rightGrade.join(', ')}\n错误题目：${wrongGrade.join(', ')}\n正确率: ${accuracy.toFixed(2)}%\n`;
+    const blob = new Blob([grade], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'grade.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
 </body>
 </html>
