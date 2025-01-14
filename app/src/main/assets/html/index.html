@@ -344,58 +344,42 @@
 
 
 
-  function parseAnswersFile(file) {
-  console.log('选择的文件:', file);
-    if (!file) {
-        alert('未选择文件！');
-        return;
-    }
-    userAnswers = [];
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const content = event.target.result;
-      const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-      const answersText = lines.join('\n');
-      userAnswers = answersText.replace(/^答案：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
-    };
-    reader.onerror = function (error) {
-        console.error('读取文件失败:', error);
-      };
-    reader.readAsText(file);
+  function parseAnswersFile(fileContent) {
+  console.log('文件内容:', fileContent);
+  if (!fileContent) {
+    alert('文件内容为空！');
+    return;
   }
+  userAnswers = [];
+  const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
+  const answersText = lines.join('\n');
+  userAnswers = answersText.replace(/^答案：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
+}
 
-  function parseQuestionsFile(file) {
-  console.log('选择的文件:', file);
-  if (!file) {
-        alert('未选择文件！');
-        return;
-    }
-    questions = [];
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const content = event.target.result;
-      const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-      const answersText = lines.join('\n');
-      questions = answersText.replace(/^题目：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
-
-      const questionsDiv = document.getElementById('questions');
-      questionsDiv.innerHTML = '';
-      questions.forEach((question) => {
-        const questionElement = document.createElement('p');
-        questionElement.innerText = `${question}=`;
-        questionsDiv.appendChild(questionElement);
-      });
-
-      questions.forEach((question) => {
-        const answer = calculateAnswer(question);
-        answers.push(answer);
-      });
-    };
-    reader.onerror = function (error) {
-        console.error('读取文件失败:', error);
-      };
-    reader.readAsText(file);
+function parseQuestionsFile(fileContent) {
+  console.log('文件内容:', fileContent);
+  if (!fileContent) {
+    alert('文件内容为空！');
+    return;
   }
+  questions = [];
+  const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line);
+  const answersText = lines.join('\n');
+  questions = answersText.replace(/^题目：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
+
+  const questionsDiv = document.getElementById('questions');
+  questionsDiv.innerHTML = '';
+  questions.forEach((question) => {
+    const questionElement = document.createElement('p');
+    questionElement.innerText = `${question}=`;
+    questionsDiv.appendChild(questionElement);
+  });
+
+  questions.forEach((question) => {
+    const answer = calculateAnswer(question);
+    answers.push(answer);
+  });
+}
 
   function calculateAccuracy(userAnswers) {
     let rightGrade = [];
@@ -417,19 +401,32 @@
         wrongGrade.push(i + 1);
       }
     }
-    const accuracy = (correctCount / answers.length) * 100;
+    const accuracy = (correctCount / (correctCount+wrongGrade.length)) * 100;
     alert(`正确率: ${accuracy.toFixed(2)}%`);
 
     const grade = `正确题目：${rightGrade.join(', ')}\n错误题目：${wrongGrade.join(', ')}\n正确率: ${accuracy.toFixed(2)}%\n`;
-    const blob = new Blob([grade], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'grade.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    //const blob = new Blob([grade], { type: 'text/plain' });
+    //const url = URL.createObjectURL(blob);
+    //const a = document.createElement('a');
+    //a.href = url;
+    //a.download = 'grade.txt';
+    //document.body.appendChild(a);
+    //a.click();
+    //document.body.removeChild(a);
+    //URL.revokeObjectURL(url);
+
+
+    // 生成 6 位时间戳
+      const timestamp = new Date().getTime().toString().slice(-6); // 取最后 6 位
+      const fileName = `grade_${timestamp}`; // 生成文件名
+
+    // 调用 Android 接口保存文件
+      if (window.Android) {
+        window.Android.saveFile(grade,fileName);
+      } else {
+        alert('无法保存文件：Android 接口未找到');
+      }
+
   }
 </script>
 </body>

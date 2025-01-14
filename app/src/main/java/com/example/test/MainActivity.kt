@@ -15,9 +15,11 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import kotlin.math.log
 
 
 //class MainActivity : AppCompatActivity() {
@@ -167,9 +169,16 @@ class MainActivity : AppCompatActivity() {
             if (uri != null) {
                 // 读取文件内容
                 val fileContent = readFileContent(uri)
-                // 将文件内容传递给 JavaScript
-                webView.evaluateJavascript("parseAnswersFile('${fileContent}')", null)
-                webView.evaluateJavascript("parseQuestionsFile('${fileContent}')", null)
+                println(fileContent)
+                val escapedContent = JSONObject.quote(fileContent)
+                // 检查文件内容是否以 "答案：" 开头
+                if (fileContent.startsWith("答案：")) {
+                    // 如果以 "答案：" 开头，只调用 parseAnswersFile
+                    webView.evaluateJavascript("parseAnswersFile($escapedContent)", null)
+                } else {
+                    // 否则，调用 parseQuestionsFile
+                    webView.evaluateJavascript("parseQuestionsFile($escapedContent)", null)
+                }
             }
         }
     }
