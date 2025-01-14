@@ -5,156 +5,213 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>小学四则运算生成器</title>
   <style>
+    /* 全局样式 */
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      background-color: #f0f0f0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
       margin: 0;
-    }
-    .container {
-      display: flex;
-      background-color: #fff;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      width: 80%;
+    }
+
+    .container {
+      background-color: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      width: 100%;
       max-width: 800px;
-    }
-    .left-section, .right-section {
-      flex: 1;
-      padding: 10px;
-    }
-    .left-section {
-      border-right: 1px solid #ddd;
-    }
-    h1 {
-      margin-bottom: 20px;
+      padding: 24px;
       text-align: center;
-      color: #333;
     }
+
+    h1 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #ff6f61;
+      margin-bottom: 24px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
     .input-group {
       margin-bottom: 20px;
-      text-align: center;
     }
+
     .input-group label {
       display: block;
-      margin-bottom: 5px;
+      font-size: 18px;
       font-weight: bold;
       color: #555;
+      margin-bottom: 8px;
     }
-    input[type="number"], input[type="file"] {
-      padding: 10px;
-      font-size: 16px;
+
+    .input-group input[type="number"],
+    .input-group input[type="file"] {
       width: 100%;
-      max-width: 200px;
-      text-align: center;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      padding: 5px 10px;
+      padding: 12px;
       font-size: 16px;
-      cursor: pointer;
-      background-color: #007bff;
+      border: 2px solid #ff6f61;
+      border-radius: 12px;
+      background-color: #fff;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .input-group input[type="number"]:focus,
+    .input-group input[type="file"]:focus {
+      border-color: #ff3b2f;
+      box-shadow: 0 0 8px rgba(255, 111, 97, 0.5);
+      outline: none;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+      justify-content: center;
+    }
+
+    .button-group button {
+      flex: 1;
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: bold;
       color: #fff;
+      background-color: #ff6f61;
       border: none;
-      border-radius: 4px;
-      margin-right: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    button:hover {
-      background-color: #0056b3;
+
+    .button-group button:hover {
+      background-color: #ff3b2f;
+      transform: translateY(-2px);
     }
+
+    .button-group button:active {
+      transform: translateY(0);
+    }
+
     .questions-container {
-      max-height: 400px;
+      margin-top: 24px;
+      padding: 16px;
+      border: 2px solid #ff6f61;
+      border-radius: 12px;
+      background-color: #fff;
+      max-height: 300px;
       overflow-y: auto;
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-top: 20px;
-      background-color: #f9f9f9;
-      border-radius: 4px;
     }
+
     .questions {
-      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
+
     .questions p {
-      margin: 5px 0;
-      color: #333;
+      margin: 0;
+      font-size: 18px;
+      color: #555;
+      padding: 12px;
+      background-color: #f9f9f9;
+      border: 2px solid #ff6f61;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 28px;
+      }
+
+      .input-group label {
+        font-size: 16px;
+      }
+
+      .input-group input[type="number"],
+      .input-group input[type="file"] {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      .button-group button {
+        font-size: 16px;
+        padding: 10px 20px;
+      }
+
+      .questions p {
+        font-size: 16px;
+        padding: 10px;
+      }
     }
   </style>
 </head>
 <body>
 <div class="container">
-  <div class="left-section">
-    <h1>小学四则运算生成器</h1>
-    <div class="input-group">
-      <label for="numSetUp">生成数字的范围:</label>
-      <input type="number" id="numSetUp" min="1" value="10">
-    </div>
-    <div class="input-group">
-      <label for="numQuestions">生成题目数量:</label>
-      <input type="number" id="numQuestions" min="1" value="10">
-    </div>
-    <div class="input-group">
-      <label for="answerFile">上传答案文件:</label>
-      <input type="file" id="answerFile" accept=".txt" onchange="parseAnswersFile(this.files[0])">
-    </div>
-    <div class="input-group">
-      <label for="questionFile">上传问题文件:</label>
-      <input type="file" id="questionFile" accept=".txt" onchange="parseQuestionsFile(this.files[0])">
-    </div>
-    <div class="container">
-      <button onclick="generateQuestions()">生成题目</button>
-      <button onclick="downloadQuestions()">下载题目</button>
-      <button onclick="downloadAnswers()">下载答案</button>
-      <button onclick="calculateAccuracy(userAnswers)">计算正确率</button>
-
-    </div>
-
-
+  <h1>小学四则运算生成器</h1>
+  <div class="input-group">
+    <label for="numSetUp">生成数字的范围:</label>
+    <input type="number" id="numSetUp" min="1" value="10">
   </div>
-  <div class="right-section">
-    <div class="questions-container">
-      <div class="questions" id="questions"></div>
+  <div class="input-group">
+    <label for="numQuestions">生成题目数量:</label>
+    <input type="number" id="numQuestions" min="1" value="10">
+  </div>
+  <div class="input-group">
+    <label for="answerFile">上传答案文件:</label>
+    <input type="file" id="answerFile" accept=".txt" onchange="parseAnswersFile(this.files[0])">
+  </div>
+  <div class="input-group">
+    <label for="questionFile">上传问题文件:</label>
+    <input type="file" id="questionFile" accept=".txt" onchange="parseQuestionsFile(this.files[0])">
+  </div>
+  <div class="button-group">
+    <button onclick="generateQuestions()">生成题目</button>
+    <button onclick="downloadQuestions()">下载题目</button>
+    <button onclick="downloadAnswers()">下载答案</button>
+    <button onclick="calculateAccuracy(userAnswers)">计算正确率</button>
+  </div>
+  <div class="questions-container">
+    <div class="questions" id="questions">
+      <p>1. 3 + 5 =</p>
+      <p>2. 10 - 4 =</p>
+      <p>3. 6 * 2 =</p>
+      <p>4. 8 / 2 =</p>
     </div>
   </div>
 </div>
+</body>
+</html>
 
 <script>
+  // JavaScript 部分保持不变
   let questions = [];
   let answers = [];
   let userAnswers = [];
+
   function generateQuestions() {
     const numQuestions = parseInt(document.getElementById('numQuestions').value, 10);
-
-
     questions = [];
     answers = [];
     const questionsDiv = document.getElementById('questions');
     questionsDiv.innerHTML = '';
 
-
     for (let i = 0; i < numQuestions; i++) {
       let question, answer;
-
-      // 随机选择是否包含括号
       const hasBrackets = Math.random() > 0.5;
-
       if (hasBrackets) {
         question = generateExpressionWithBrackets();
       } else {
         question = generateSimpleExpression();
       }
-
       questions.push(question);
-
-      // 计算答案
       answer = calculateAnswer(question);
       answers.push(answer);
-
-
 
       const questionElement = document.createElement('p');
       questionElement.innerText = `${i + 1}. ${question} =`;
@@ -179,9 +236,7 @@
   }
 
   function generateNumber() {
-
     const numSetUp = parseInt(document.getElementById('numSetUp').value, 10);
-
     const isFraction = Math.random() > 0.5;
     if (isFraction) {
       const numerator = Math.floor(Math.random() * 10) + 1;
@@ -196,10 +251,9 @@
     const [numerator, denominator] = fraction.split('/').map(Number);
     const integerPart = Math.floor(numerator / denominator);
     const remainder = numerator % denominator;
-
     if (integerPart === 0) {
       return fraction;
-    }else if (remainder ===0){
+    } else if (remainder === 0) {
       return integerPart;
     } else {
       return `${integerPart}'${remainder}/${denominator}`;
@@ -207,7 +261,6 @@
   }
 
   function calculateAnswer(expression) {
-    // 使用 eval 计算表达式，注意 eval 的安全性问题
     try {
       return eval(convertToMathExpression(expression));
     } catch (e) {
@@ -216,7 +269,6 @@
   }
 
   function convertToMathExpression(expression) {
-    // 将带分数转换为浮点数
     return expression.replace(/(\d+)'(\d+)\/(\d+)/g, (match, p1, p2, p3) => parseFloat(p1) + parseFloat(p2) / parseFloat(p3));
   }
 
@@ -225,19 +277,23 @@
       alert('请先生成题目！');
       return;
     }
-
     const questionsText = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
-    const allText = `题目：\n${questionsText}\n`;
-
-    const blob = new Blob([allText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'questions.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const allTextQuestion = `题目：\n${questionsText}\n`;
+  //  const blob = new Blob([allText], { type: 'text/plain' });
+  //  const url = URL.createObjectURL(blob);
+  //  const a = document.createElement('a');
+  //  a.href = url;
+  //  a.download = 'questions.txt';
+  //  document.body.appendChild(a);
+  //  a.click();
+  //  document.body.removeChild(a);
+  //  URL.revokeObjectURL(url);
+      // 调用 Android 接口保存文件
+      if (window.Android) {
+        window.Android.saveFile(allTextQuestion);
+      } else {
+        alert('无法保存文件：Android 接口未找到');
+      }
   }
 
   function downloadAnswers() {
@@ -245,41 +301,39 @@
       alert('请先生成题目！');
       return;
     }
-
     const answersText = answers.map((a, i) => `${i + 1}. ${a}`).join('\n');
-    const allText = `答案：\n${answersText}\n`;
-
-    const blob = new Blob([allText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'answers.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const allTextAnswer = `答案：\n${answersText}\n`;
+    //const blob = new Blob([allText], { type: 'text/plain' });
+    //const url = URL.createObjectURL(blob);
+    //const a = document.createElement('a');
+    //a.href = url;
+    //a.download = 'answers.txt';
+    //document.body.appendChild(a);
+    //a.click();
+    //document.body.removeChild(a);
+    //URL.revokeObjectURL(url);
+    // 调用 Android 接口保存文件
+      if (window.Android) {
+        window.Android.saveFile(allTextAnswer);
+      } else {
+        alert('无法保存文件：Android 接口未找到');
+      }
   }
 
-
   function parseAnswersFile(file) {
-
     userAnswers = [];
-
     const reader = new FileReader();
     reader.onload = function(event) {
       const content = event.target.result;
       const lines = content.split('\n').map(line => line.trim()).filter(line => line);
       const answersText = lines.join('\n');
       userAnswers = answersText.replace(/^答案：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
-
     };
     reader.readAsText(file);
   }
 
   function parseQuestionsFile(file) {
-
     questions = [];
-
     const reader = new FileReader();
     reader.onload = function(event) {
       const content = event.target.result;
@@ -287,18 +341,14 @@
       const answersText = lines.join('\n');
       questions = answersText.replace(/^题目：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
 
-
       const questionsDiv = document.getElementById('questions');
       questionsDiv.innerHTML = '';
-
-      // 显示题目
       questions.forEach((question) => {
         const questionElement = document.createElement('p');
         questionElement.innerText = `${question}=`;
         questionsDiv.appendChild(questionElement);
       });
 
-      // 计算答案
       questions.forEach((question) => {
         const answer = calculateAnswer(question);
         answers.push(answer);
@@ -308,10 +358,8 @@
   }
 
   function calculateAccuracy(userAnswers) {
-
     let rightGrade = [];
     let wrongGrade = [];
-
     if (userAnswers.length === 0) {
       alert('请先上传答案文件！');
       return;
@@ -325,16 +373,14 @@
       if (parseFloat(userAnswers[i]) === answers[i]) {
         rightGrade.push(i + 1);
         correctCount++;
-      }else if (userAnswers[i] !== answers[i]&&userAnswers[i]!==undefined){
+      } else if (userAnswers[i] !== answers[i] && userAnswers[i] !== undefined) {
         wrongGrade.push(i + 1);
       }
     }
     const accuracy = (correctCount / answers.length) * 100;
     alert(`正确率: ${accuracy.toFixed(2)}%`);
 
-
-    grade = `正确题目：${rightGrade.join(', ')}\n错误题目：${wrongGrade.join(', ')}\n正确率: ${accuracy.toFixed(2)}%\n`;
-
+    const grade = `正确题目：${rightGrade.join(', ')}\n错误题目：${wrongGrade.join(', ')}\n正确率: ${accuracy.toFixed(2)}%\n`;
     const blob = new Blob([grade], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
