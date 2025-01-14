@@ -1,27 +1,23 @@
 package com.example.test
 
-import android.Manifest
-import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.Settings
 import android.webkit.JavascriptInterface
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.example.test.R
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 
 
 //class MainActivity : AppCompatActivity() {
@@ -68,6 +64,8 @@ class MainActivity : AppCompatActivity() {
         private const val REQUEST_CODE_STORAGE_PERMISSION = 1
     }
 
+    private val REQUEST_CODE_FILE_PICKER = 1
+
     private lateinit var webView: WebView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,13 +75,27 @@ class MainActivity : AppCompatActivity() {
         // 检查并请求权限
 //        checkAndRequestPermissions()
 
+        webView.settings.allowFileAccess = true // 允许访问文件
+        webView.settings.allowContentAccess = true // 允许访问内容
+        webView.settings.allowFileAccessFromFileURLs = true // 允许从文件 URL 访问
+        webView.settings.allowUniversalAccessFromFileURLs = true // 允许从文件 URL 进行跨域访问
+
         // 配置 WebView 设置
         webView.settings.javaScriptEnabled = true // 启用 JavaScript
-        webView.settings.domStorageEnabled = true // 启用 DOM 存储（如果需要）
 
         // 设置 WebViewClient 和 WebChromeClient
         webView.webViewClient = WebViewClient() // 阻止跳转到外部浏览器
-        webView.webChromeClient = WebChromeClient()
+        // 设置 WebChromeClient
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                webView: WebView?,
+                filePathCallback: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                // 在这里处理文件选择逻辑
+                return super.onShowFileChooser(webView, filePathCallback, fileChooserParams)
+            }
+        }
 
         // 其他 WebView 配置
         webView.settings.domStorageEnabled = true // 如果需要使用 localStorage
@@ -97,9 +109,17 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
             }
             @JavascriptInterface
-            fun saveFile(content: String) {
-                saveFileToExternalStorage(content)
+            fun saveFile(content: String,name: String) {
+                saveFileToSharedStorage(content,name)
             }
+            @JavascriptInterface
+            fun openFilePicker() {
+                // 打开文件选择器
+                val intent = Intent(Intent.ACTION_GET_CONTENT)
+                intent.type = "*/*" // 允许选择所有文件类型
+                startActivityForResult(intent, REQUEST_CODE_FILE_PICKER)
+            }
+
         }, "Android")
 
         // 设置下载监听器
@@ -139,6 +159,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_FILE_PICKER && resultCode == RESULT_OK) {
+            val uri = data?.data
+            if (uri != null) {
+                // 读取文件内容
+                val fileContent = readFileContent(uri)
+                // 将文件内容传递给 JavaScript
+                webView.evaluateJavascript("parseAnswersFile('${fileContent}')", null)
+                webView.evaluateJavascript("parseQuestionsFile('${fileContent}')", null)
+            }
+        }
+    }
+
+    private fun readFileContent(uri: Uri): String {
+        return try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val stringBuilder = StringBuilder()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                stringBuilder.append(line).append("\n")
+            }
+            reader.close()
+            stringBuilder.toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "读取文件失败：${e.message}"
+        }
+    }
+
+
     private fun saveFileToExternalStorage(content: String) {
         try {
             // 获取应用的私有目录
@@ -150,6 +203,21 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "保存文件失败：${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
+    private fun saveFileToSharedStorage(content: String,name:String) {
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "$name.txt")
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        }
 
+        val resolver = contentResolver
+        val uri = resolver.insert(MediaStore.Files.getContentUri("external"), values)
+        uri?.let {
+            resolver.openOutputStream(it)?.use { outputStream ->
+                outputStream.write(content.toByteArray())
+            }
+            Toast.makeText(this, "文件已保存到共享存储", Toast.LENGTH_SHORT).show()
+        }
+    }
 
 }

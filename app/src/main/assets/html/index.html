@@ -164,11 +164,13 @@
   </div>
   <div class="input-group">
     <label for="answerFile">上传答案文件:</label>
-    <input type="file" id="answerFile" accept=".txt" onchange="parseAnswersFile(this.files[0])">
+<!--    <input type="file" id="answerFile" accept=".txt" onchange="parseAnswersFile(this.files[0])">-->
+    <input type="file" id="answerFile" accept=".txt" onclick="openFilePicker()">
   </div>
   <div class="input-group">
     <label for="questionFile">上传问题文件:</label>
-    <input type="file" id="questionFile" accept=".txt" onchange="parseQuestionsFile(this.files[0])">
+<!--    <input type="file" id="questionFile" accept=".txt" onchange="parseQuestionsFile(this.files[0])">-->
+    <input type="file" id="questionFile" accept=".txt" onclick="openFilePicker()">
   </div>
   <div class="button-group">
     <button onclick="generateQuestions()">生成题目</button>
@@ -288,9 +290,13 @@
   //  a.click();
   //  document.body.removeChild(a);
   //  URL.revokeObjectURL(url);
+
+  // 生成 6 位时间戳
+      const timestamp = new Date().getTime().toString().slice(-6); // 取最后 6 位
+      const fileName = `question_${timestamp}`; // 生成文件名
       // 调用 Android 接口保存文件
       if (window.Android) {
-        window.Android.saveFile(allTextQuestion);
+        window.Android.saveFile(allTextQuestion,fileName);
       } else {
         alert('无法保存文件：Android 接口未找到');
       }
@@ -312,15 +318,38 @@
     //a.click();
     //document.body.removeChild(a);
     //URL.revokeObjectURL(url);
+
+    // 生成 6 位时间戳
+      const timestamp = new Date().getTime().toString().slice(-6); // 取最后 6 位
+      const fileName = `answers_${timestamp}`; // 生成文件名
+
     // 调用 Android 接口保存文件
       if (window.Android) {
-        window.Android.saveFile(allTextAnswer);
+        window.Android.saveFile(allTextAnswer,fileName);
       } else {
         alert('无法保存文件：Android 接口未找到');
       }
   }
 
+  function openFilePicker() {
+      // 调用 Android 接口打开文件选择器
+      if (window.Android) {
+        window.Android.openFilePicker();
+      } else {
+        alert('无法打开文件选择器：Android 接口未找到');
+      }
+    }
+
+
+
+
+
   function parseAnswersFile(file) {
+  console.log('选择的文件:', file);
+    if (!file) {
+        alert('未选择文件！');
+        return;
+    }
     userAnswers = [];
     const reader = new FileReader();
     reader.onload = function(event) {
@@ -329,10 +358,18 @@
       const answersText = lines.join('\n');
       userAnswers = answersText.replace(/^答案：\n/, '').split('\n').map(line => line.trim().split('. ')[1]).filter(line => line);
     };
+    reader.onerror = function (error) {
+        console.error('读取文件失败:', error);
+      };
     reader.readAsText(file);
   }
 
   function parseQuestionsFile(file) {
+  console.log('选择的文件:', file);
+  if (!file) {
+        alert('未选择文件！');
+        return;
+    }
     questions = [];
     const reader = new FileReader();
     reader.onload = function(event) {
@@ -354,6 +391,9 @@
         answers.push(answer);
       });
     };
+    reader.onerror = function (error) {
+        console.error('读取文件失败:', error);
+      };
     reader.readAsText(file);
   }
 
