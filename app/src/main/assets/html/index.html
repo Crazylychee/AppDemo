@@ -156,11 +156,11 @@
   <h1>小学四则运算生成器</h1>
   <div class="input-group">
     <label for="numSetUp">生成数字的范围:</label>
-    <input type="number" id="numSetUp" min="1" value="10">
+    <input type="number" id="numSetUp" min="1" value="1000">
   </div>
   <div class="input-group">
     <label for="numQuestions">生成题目数量:</label>
-    <input type="number" id="numQuestions" min="1" value="10">
+    <input type="number" id="numQuestions" min="1" value="1000">
   </div>
   <div class="input-group">
     <label for="answerFile">上传答案文件:</label>
@@ -172,11 +172,17 @@
 <!--    <input type="file" id="questionFile" accept=".txt" onchange="parseQuestionsFile(this.files[0])">-->
     <input type="file" id="questionFile" accept=".txt" onclick="openFilePicker()">
   </div>
+  <div class="input-group">
+    <label for="shareLink">分享链接:</label>
+    <input type="number" id="shareLink" >
+  </div>
   <div class="button-group">
     <button onclick="generateQuestions()">生成题目</button>
     <button onclick="downloadQuestions()">下载题目</button>
     <button onclick="downloadAnswers()">下载答案</button>
     <button onclick="calculateAccuracy(userAnswers)">计算正确率</button>
+    <button onclick="shareQuestions()">分享题目</button>
+    <button onclick="getSharedQuestions()">获取分享题目</button>
   </div>
   <div class="questions-container">
     <div class="questions" id="questions">
@@ -428,6 +434,50 @@ function parseQuestionsFile(fileContent) {
       }
 
   }
+
+  function getSharedQuestions(){
+    var shareLink = document.getElementById('shareLink').value;
+    if (window.Android) {
+        window.Android.getSharedQuestions(shareLink);
+      } else {
+        alert('无法保存文件：Android 接口未找到');
+      }
+  }
+
+  function receiveOnlineQuestion(questionText){
+    questions = questionText.split(",")
+
+  const questionsDiv = document.getElementById('questions');
+  questionsDiv.innerHTML = '';
+  questions.forEach((question) => {
+    const questionElement = document.createElement('p');
+    questionElement.innerText = `${question}=`;
+    questionsDiv.appendChild(questionElement);
+  });
+
+  questions.forEach((question) => {
+    const answer = calculateAnswer(question);
+    answers.push(answer);
+  });
+
+  }
+
+  function shareQuestions(){
+    var shareLink = document.getElementById('shareLink').value;
+    if (window.Android) {
+        window.Android.addQuestions(shareLink,questions.toString());
+      } else {
+        alert('无法保存文件：Android 接口未找到');
+      }
+
+  }
+
+
+  function receiveAddShareExamResponse(str){
+    alert(str)
+  }
+
+
 </script>
 </body>
 </html>

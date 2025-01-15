@@ -15,10 +15,17 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 import kotlin.math.log
 
 
@@ -120,6 +127,29 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(Intent.ACTION_GET_CONTENT)
                 intent.type = "*/*" // 允许选择所有文件类型
                 startActivityForResult(intent, REQUEST_CODE_FILE_PICKER)
+            }
+
+            @JavascriptInterface
+            fun addQuestions(shareId: String, questionText: String) {
+                Thread {
+                    val data = addShareExam(shareId, questionText)
+                    println(questionText)
+                    println(data)
+                    runOnUiThread {
+                        webView.loadUrl("javascript:receiveAddShareExamResponse('${JavaScriptUtils.escape(data)}')")
+                    }
+                }.start()
+            }
+
+            @JavascriptInterface
+            fun getSharedQuestions(id:String) {
+                Thread {
+                    val data = getShareExam(id)
+                    println(data)
+                    runOnUiThread {
+                        webView.loadUrl("javascript:receiveOnlineQuestion('${JavaScriptUtils.escape(data)}')")
+                    }
+                }.start()
             }
 
         }, "Android")
@@ -229,4 +259,65 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun addShareExam(shareId: String, question: String): String {
+        val response = StringBuilder()
+        try {
+            val url = URL("http://${server.url}/addShareExam")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+
+            val encodedShareId = URLEncoder.encode(shareId, "UTF-8")
+            val encodedQuestion = URLEncoder.encode(question, "UTF-8")
+            val data = "shareId=$encodedShareId&questionText=$encodedQuestion"
+
+            val outputStream = connection.getOutputStream()
+            outputStream.write(data.toByteArray())
+            outputStream.flush()
+            outputStream.close()
+
+            val inputStream = connection.inputStream
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            var line: String?
+            while (bufferedReader.readLine().also { line = it } != null) {
+                response.append(line)
+            }
+            bufferedReader.close()
+            connection.disconnect()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            response.append("Error: ${e.message}")
+        }
+        return response.toString()
+    }
+
+    fun getShareExam(id:String): String {
+        val response = StringBuilder()
+        try {
+            val url = "http://${server.url}/getShareExam?id="+id
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connect()
+
+            val inputStream = connection.inputStream
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            var line: String?
+            while (bufferedReader.readLine().also { line = it } != null) {
+                response.append(line)
+            }
+            bufferedReader.close()
+            connection.disconnect()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            response.append("Error: ${e.message}")
+        }
+        return response.toString()
+    }
+}
+
+object JavaScriptUtils {
+    fun escape(str: String): String {
+        return str.replace("'", "\\'")
+    }
 }
